@@ -15,7 +15,7 @@ describe('GET /api/hello', () => {
     const response = await request(app).get('/api/hello').expect('Content-Type', /json/).expect(200)
 
     expect(response.body).toEqual({
-      message: 'Hello, Vercel!',
+      message: 'Hello, World!',
     })
   })
 })
