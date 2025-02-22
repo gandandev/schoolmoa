@@ -74,8 +74,6 @@ function handleNeisStatus(response: VercelResponse, status: string) {
         message: '오늘 호출 횟수를 초과했습니다.',
       },
     })
-  } else if (status === 'INFO-200') {
-    return response.status(200).json([])
   }
 }
 
@@ -113,10 +111,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
       })
 
     // 상태 오류 처리
-    handleNeisStatus(
-      response,
-      result.mealServiceDietInfo ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE,
-    )
+    const status = result.mealServiceDietInfo ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
+    handleNeisStatus(response, status)
+    if (status === 'INFO-200') return response.status(200).json([])
 
     const data = result.mealServiceDietInfo[1].row
 
