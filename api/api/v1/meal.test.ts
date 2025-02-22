@@ -215,7 +215,7 @@ describe('하루 급식 조회', () => {
     expect(response.body).toEqual({
       error: {
         code: 400,
-        message: '쿼리가 누락되었습니다.',
+        message: '쿼리가 잘못되었습니다.',
       },
     })
   })
@@ -232,7 +232,7 @@ describe('하루 급식 조회', () => {
     expect(response.body).toEqual({
       error: {
         code: 400,
-        message: '쿼리의 형식이 잘못되었습니다.',
+        message: '쿼리가 잘못되었습니다.',
       },
     })
   })
