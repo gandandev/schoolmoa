@@ -1,6 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import 'dotenv/config'
 
+type MealResponse = {
+  date: string
+  meals: {
+    type: string
+    typeCode: number
+    menu: {
+      name: string
+      allergens: number[]
+    }[]
+    headCount: number
+    origin: Record<string, string>
+    calorie: number
+    nutrition: Record<string, string>
+  }[]
+}[]
+
 function formatMeal(meal: string): { name: string; allergens: number[] } {
   const match = meal.match(/^\s*(.*?)\s*(?:\(([0-9.]+)\))?\s*$/)
 
@@ -95,21 +111,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const data = result.mealServiceDietInfo[1].row
 
-    const meals: {
-      date: string
-      meals: {
-        type: string
-        typeCode: number
-        menu: {
-          name: string
-          allergens: number[]
-        }[]
-        headCount: number
-        origin: Record<string, string>
-        calorie: number
-        nutrition: Record<string, string>
-      }[]
-    }[] = []
+    const meals: MealResponse = []
 
     for (const meal of data) {
       const formattedDate = `${meal.MLSV_YMD.slice(0, 4)}-${meal.MLSV_YMD.slice(4, 6)}-${meal.MLSV_YMD.slice(6, 8)}`
