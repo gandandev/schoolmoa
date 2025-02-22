@@ -17,30 +17,10 @@ type MealResponse = {
   }[]
 }[]
 
-function validateQueries(response: VercelResponse, province: string, school: string, date: string) {
-  // 쿼리 누락 확인
-  if (!province || !school || !date) {
-    return response.status(400).json({
-      error: {
-        code: 400,
-        message: '쿼리가 누락되었습니다.',
-      },
-    })
-  }
+function validateQueries(province: string, school: string, date: string) {
+  if (!province || !school || !date) return false
 
-  // 쿼리 형식 검증
-  if (
-    !/^[A-Z]\d{2}$/.test(province as string) || // A00
-    !/^\d+$/.test(school as string) || // 000000..
-    !/^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date as string) // YYYYMMDD or YYYY-MM-DD
-  ) {
-    return response.status(400).json({
-      error: {
-        code: 400,
-        message: '쿼리의 형식이 잘못되었습니다.',
-      },
-    })
-  }
+  return /^[A-Z]\d{2}$/.test(province) && /^\d+$/.test(school) && /^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date)
 }
 
 function handleNeisStatus(response: VercelResponse, status: string) {
@@ -129,7 +109,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
 
     // 쿼리 검증
-    validateQueries(response, province as string, school as string, date as string)
+    if (!validateQueries(province as string, school as string, date as string)) {
+      return response.status(400).json({
+        error: {
+          code: 400,
+          message: '쿼리가 잘못되었습니다.',
+        },
+      })
+    }
 
     // NEIS API 호출
     const result = await fetch(
