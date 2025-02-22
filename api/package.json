@@ -8,7 +8,8 @@
   },
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@vercel/node": "^2.11.0"
+    "@vercel/node": "^2.11.0",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
