@@ -101,9 +101,9 @@ function formatMeal(meal: Record<string, string>): MealResponse[number]['meals']
   // 탄수화물(g) : 139.0 -> { '탄수화물': '139.0g' }
   const nutrition = meal.NTR_INFO.split('<br/>').reduce(
     (acc, curr) => {
-      const [key, value] = curr.split(' : ')
+      const [key, value] = curr.split(':')
       const name = key.replace(/\([^)]*\)/g, '').trim()
-      acc[name] = `${value}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
+      acc[name] = `${Number(value)}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
       return acc
     },
     {} as Record<string, string>,
