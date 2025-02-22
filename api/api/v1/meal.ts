@@ -43,6 +43,42 @@ function validateQueries(response: VercelResponse, province: string, school: str
   }
 }
 
+function handleNeisStatus(response: VercelResponse, status: string) {
+  if (status === 'ERROR-300') {
+    return response.status(400).json({
+      error: {
+        code: 400,
+        message: '쿼리가 누락되었습니다.',
+      },
+    })
+  } else if (
+    status === 'ERROR-290' ||
+    status === 'ERROR-310' ||
+    status === 'ERROR-333' ||
+    status === 'ERROR-336' ||
+    status === 'ERROR-500' ||
+    status === 'ERROR-600' ||
+    status === 'ERROR-601' ||
+    status === 'INFO-300'
+  ) {
+    return response.status(400).json({
+      error: {
+        code: 500,
+        message: '데이터를 불러오는 데 실패했습니다.',
+      },
+    })
+  } else if (status === 'ERROR-337') {
+    return response.status(429).json({
+      error: {
+        code: 429,
+        message: '오늘 호출 횟수를 초과했습니다.',
+      },
+    })
+  } else if (status === 'INFO-200') {
+    return response.status(200).json([])
+  }
+}
+
 function formatMeal(meal: string): { name: string; allergens: number[] } {
   const match = meal.match(/^\s*(.*?)\s*(?:\(([0-9.]+)\))?\s*$/)
 
@@ -76,43 +112,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
         })
       })
 
-    // API 상태 확인
-    const status = result.mealServiceDietInfo ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
-
-    // 오류 처리
-    if (status === 'ERROR-300') {
-      return response.status(400).json({
-        error: {
-          code: 400,
-          message: '쿼리가 누락되었습니다.',
-        },
-      })
-    } else if (
-      status === 'ERROR-290' ||
-      status === 'ERROR-310' ||
-      status === 'ERROR-333' ||
-      status === 'ERROR-336' ||
-      status === 'ERROR-500' ||
-      status === 'ERROR-600' ||
-      status === 'ERROR-601' ||
-      status === 'INFO-300'
-    ) {
-      return response.status(400).json({
-        error: {
-          code: 500,
-          message: '데이터를 불러오는 데 실패했습니다.',
-        },
-      })
-    } else if (status === 'ERROR-337') {
-      return response.status(429).json({
-        error: {
-          code: 429,
-          message: '오늘 호출 횟수를 초과했습니다.',
-        },
-      })
-    } else if (status === 'INFO-200') {
-      return response.status(200).json([])
-    }
+    // 상태 오류 처리
+    handleNeisStatus(
+      response,
+      result.mealServiceDietInfo ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE,
+    )
 
     const data = result.mealServiceDietInfo[1].row
 
