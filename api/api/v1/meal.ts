@@ -77,14 +77,47 @@ function handleNeisStatus(response: VercelResponse, status: string) {
   }
 }
 
-function formatMeal(meal: string): { name: string; allergens: number[] } {
-  const match = meal.match(/^\s*(.*?)\s*(?:\(([0-9.]+)\))?\s*$/)
+function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
+  const menu = meal.DDISH_NM.split('<br/>').map((m) => {
+    const match = m.match(/^\s*(.*?)\s*(?:\(([0-9.]+)\))?\s*$/)
 
-  if (!match) return { name: meal.trim(), allergens: [] }
+    if (!match) return { name: m.trim(), allergens: [] }
 
-  const [, name, allergens] = match
+    const [, name, allergens] = match
 
-  return { name: name, allergens: allergens ? allergens.split('.').map(Number) : [] }
+    return { name, allergens: allergens ? allergens.split('.').map(Number) : [] }
+  })
+
+  // 돼지고기 : 국내산 -> { '돼지고기': '국내산' }
+  const origin = meal.ORPLC_INFO.split('<br/>').reduce(
+    (acc, curr) => {
+      const [key, value] = curr.split(':')
+      acc[key.trim()] = value.trim()
+      return acc
+    },
+    {} as Record<string, string>,
+  )
+
+  // 탄수화물(g) : 139.0 -> { '탄수화물': '139.0g' }
+  const nutrition = meal.NTR_INFO.split('<br/>').reduce(
+    (acc, curr) => {
+      const [key, value] = curr.split(' : ')
+      const name = key.replace(/\([^)]*\)/g, '').trim()
+      acc[name] = `${value}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
+      return acc
+    },
+    {} as Record<string, string>,
+  )
+
+  return {
+    type: meal.MMEAL_SC_NM,
+    typeCode: Number(meal.MMEAL_SC_CODE),
+    menu,
+    headCount: Number(meal.MLSV_FGR),
+    origin,
+    calorie: parseFloat(meal.CAL_INFO), // 소수점 처리 + 뒤의 Kcal 제거
+    nutrition,
+  }
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
@@ -129,32 +162,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         })
       }
 
-      meals
-        .find((m) => m.date === formattedDate)
-        ?.meals.push({
-          type: meal.MMEAL_SC_NM,
-          typeCode: Number(meal.MMEAL_SC_CODE),
-          menu: meal.DDISH_NM.split('<br/>').map(formatMeal),
-          headCount: Number(meal.MLSV_FGR),
-          origin: meal.ORPLC_INFO.split('<br/>').reduce(
-            (acc, curr) => {
-              const [key, value] = curr.split(':')
-              acc[key.trim()] = value.trim()
-              return acc
-            },
-            {} as Record<string, string>,
-          ),
-          calorie: parseFloat(meal.CAL_INFO), // 소수점 처리 + 뒤의 Kcal 제거
-          nutrition: meal.NTR_INFO.split('<br/>').reduce(
-            (acc, curr) => {
-              const [key, value] = curr.split(' : ')
-              const name = key.replace(/\([^)]*\)/g, '').trim()
-              acc[name] = `${value}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
-              return acc
-            },
-            {} as Record<string, string>,
-          ),
-        })
+      meals.find((m) => m.date === formattedDate)?.meals.push(formatMeal(meal))
     }
 
     return response.status(200).json(meals)
