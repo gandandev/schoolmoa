@@ -17,10 +17,36 @@ type MealResponse = {
   }[]
 }[]
 
-function validateQueries(province: string, school: string, date: string) {
-  if (!province || !school || !date) return false
+type DateQuery = {
+  date?: string
+  startDate?: string
+  endDate?: string
+}
 
-  return /^[A-Z]\d{2}$/.test(province) && /^\d+$/.test(school) && /^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date)
+function validateDate(date: string) {
+  return /^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date)
+}
+
+function validateQueries(province: string, school: string, { date, startDate, endDate }: DateQuery) {
+  if (!province || !school) return false
+  if (!/^[A-Z]\d{2}$/.test(province) || !/^\d+$/.test(school)) return false
+
+  // 한 날짜 또는 날짜 범위 중 하나는 반드시 있어야 함
+  if (!date && (!startDate || !endDate)) return false
+  if (date && (startDate || endDate)) return false
+
+  // 날짜 형식 검증
+  if (date) return validateDate(date)
+  if (startDate && endDate) {
+    if (!validateDate(startDate) || !validateDate(endDate)) return false
+
+    // startDate가 endDate 이후면 안 됨
+    const start = startDate.replace(/-/g, '')
+    const end = endDate.replace(/-/g, '')
+    return start <= end
+  }
+
+  return false
 }
 
 function handleNeisStatus(response: VercelResponse, status: string) {
@@ -101,7 +127,7 @@ function formatMeal(meal: Record<string, string>): MealResponse[number]['meals']
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  const { province, school, date } = request.query
+  const { province, school, date, startDate, endDate } = request.query
 
   try {
     if (!process.env.NEIS_API_KEY) {
@@ -109,7 +135,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
 
     // 쿼리 검증
-    if (!validateQueries(province as string, school as string, date as string)) {
+    if (
+      !validateQueries(province as string, school as string, {
+        date: date as string,
+        startDate: startDate as string,
+        endDate: endDate as string,
+      })
+    ) {
       return response.status(400).json({
         error: {
           code: 400,
@@ -120,7 +152,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     // NEIS API 호출
     const result = await fetch(
-      `https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=${province}&SD_SCHUL_CODE=${school}&MLSV_YMD=${(date as string).replace(/-/g, '')}&Type=json&KEY=${process.env.NEIS_API_KEY}`,
+      `https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=${province}&SD_SCHUL_CODE=${school}&Type=json&KEY=${process.env.NEIS_API_KEY}${
+        date
+          ? `&MLSV_YMD=${(date as string).replace(/-/g, '')}`
+          : `&MLSV_FROM_YMD=${(startDate as string).replace(/-/g, '')}&MLSV_TO_YMD=${(endDate as string).replace(/-/g, '')}`
+      }`,
     )
       .then((res) => res.json())
       .catch((err) => {
