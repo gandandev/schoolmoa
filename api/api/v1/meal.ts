@@ -85,13 +85,21 @@ function handleNeisStatus(response: VercelResponse, status: string) {
 
 function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
   const menu = meal.DDISH_NM.split('<br/>').map((m) => {
-    const match = m.match(/^\s*(.*?)\s*(?:\(([0-9.]+)\))?\s*$/)
+    // 형식 1: 메뉴이름 (1.2.3.)
+    // 헝식 2: 메뉴이름1.2.3.
+    const item = m.trim()
+    const match = item.match(/^\s*(.*?)\s*\(?([0-9. ]+)\)?$/)
+    if (match) {
+      const [, name, allergenStr] = match
+      if (allergenStr) {
+        return {
+          name, // \s*로 공백이 이미 제거되었으므로 .trim()하지 않아도 됨
+          allergens: allergenStr.split('.').map(Number).filter(Boolean),
+        }
+      }
+    }
 
-    if (!match) return { name: m.trim(), allergens: [] }
-
-    const [, name, allergens] = match
-
-    return { name, allergens: allergens ? allergens.split('.').map(Number) : [] }
+    return { name: item, allergens: [] }
   })
 
   // 돼지고기 : 국내산 -> { '돼지고기': '국내산' }
