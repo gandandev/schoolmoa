@@ -185,20 +185,24 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const data = result.mealServiceDietInfo[1].row
 
-    const meals: MealResponse = []
+    // 날짜별로 식사 데이터 모으기
+    const mealsByDate: Record<string, Record<string, string>[]> = {}
 
     for (const meal of data) {
       const formattedDate = `${meal.MLSV_YMD.slice(0, 4)}-${meal.MLSV_YMD.slice(4, 6)}-${meal.MLSV_YMD.slice(6, 8)}`
 
-      if (!meals.find((m) => m.date === formattedDate)) {
-        meals.push({
-          date: formattedDate,
-          meals: [],
-        })
+      if (!mealsByDate[formattedDate]) {
+        mealsByDate[formattedDate] = []
       }
 
-      meals.find((m) => m.date === formattedDate)?.meals.push(formatMeal(meal))
+      mealsByDate[formattedDate].push(meal)
     }
+
+    // 모은 데이터 한 번에 처리
+    const meals: MealResponse = Object.entries(mealsByDate).map(([date, dateMeals]) => ({
+      date,
+      meals: dateMeals.map(formatMeal),
+    }))
 
     return response.status(200).json(meals)
   } catch (err) {
