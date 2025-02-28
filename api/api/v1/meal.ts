@@ -158,7 +158,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       })
     }
 
-    // NEIS API 호출
+    // 나이스 API 호출
     const result = await fetch(
       `https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=${province}&SD_SCHUL_CODE=${school}&Type=json&KEY=${process.env.NEIS_API_KEY}${
         date
