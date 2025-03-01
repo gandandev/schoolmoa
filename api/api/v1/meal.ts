@@ -158,14 +158,22 @@ export default async function handler(request: VercelRequest, response: VercelRe
       })
     }
 
-    // 나이스 API 호출
-    const result = await fetch(
-      `https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=${province}&SD_SCHUL_CODE=${school}&Type=json&KEY=${process.env.NEIS_API_KEY}${
-        date
-          ? `&MLSV_YMD=${(date as string).replace(/-/g, '')}`
-          : `&MLSV_FROM_YMD=${(startDate as string).replace(/-/g, '')}&MLSV_TO_YMD=${(endDate as string).replace(/-/g, '')}`
-      }`,
-    )
+    // 나이스 API 쿼리 생성
+    const params = new URLSearchParams({
+      ATPT_OFCDC_SC_CODE: province as string,
+      SD_SCHUL_CODE: school as string,
+      Type: 'json',
+      KEY: process.env.NEIS_API_KEY,
+    })
+
+    if (date) {
+      params.append('MLSV_YMD', (date as string).replace(/-/g, ''))
+    } else {
+      params.append('MLSV_FROM_YMD', (startDate as string).replace(/-/g, ''))
+      params.append('MLSV_TO_YMD', (endDate as string).replace(/-/g, ''))
+    }
+
+    const result = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
       .then((res) => res.json())
       .catch((err) => {
         console.error(err)
