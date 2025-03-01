@@ -193,7 +193,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const data = result.mealServiceDietInfo[1].row
 
-    // 날짜별로 식사 데이터 모으기
+    // 날짜별로 급식 데이터 모으기
     const mealsByDate: Record<string, Record<string, string>[]> = {}
 
     for (const meal of data) {
