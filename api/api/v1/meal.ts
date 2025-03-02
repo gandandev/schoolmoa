@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import 'dotenv/config'
 import type { NeisMealResponse, NeisMealResponseRow } from '../../types/neis'
 
+const PAGE_SIZE = 1000
+
 type MealResponse = {
   date: string
   meals: {
@@ -153,7 +155,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const params = new URLSearchParams({
       ATPT_OFCDC_SC_CODE: province as string,
       SD_SCHUL_CODE: school as string,
-      pSize: '1000',
+      pSize: PAGE_SIZE,
       Type: 'json',
       KEY: process.env.NEIS_API_KEY,
     })
@@ -210,7 +212,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     // 전체 데이터 수 확인
     const totalCount = firstPageResult.mealServiceDietInfo[0].head[0].list_total_count
-    const totalPages = Math.ceil(totalCount / 1000)
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE)
 
     let allData = [...firstPageResult.mealServiceDietInfo[1].row]
 
