@@ -274,7 +274,7 @@ describe('쿼리 유효성 검사', () => {
   })
 })
 
-describe('NEIS 상태 코드 처리', () => {
+describe('나이스 상태 코드 처리', () => {
   test('ERROR-300 처리', () => {
     const result = handleNeisStatus('ERROR-300')
     expect(result).toEqual({
