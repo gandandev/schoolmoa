@@ -332,7 +332,7 @@ describe('NEIS 상태 코드 처리', () => {
   })
 })
 
-describe('급식 데이터 포맷팅', () => {
+describe('급식 데이터 정리', () => {
   test('메뉴 및 알레르기 정보 파싱', () => {
     const mockMeal = {
       MMEAL_SC_NM: '중식',
