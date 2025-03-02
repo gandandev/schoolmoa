@@ -315,7 +315,7 @@ describe('NEIS 상태 코드 처리', () => {
 
     for (const code of errorCodes) {
       expect(handleNeisStatus(code)).toEqual({
-        status: 400,
+        status: 500,
         body: {
           error: {
             code: 500,
