@@ -153,6 +153,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const params = new URLSearchParams({
       ATPT_OFCDC_SC_CODE: province as string,
       SD_SCHUL_CODE: school as string,
+      pSize: '1000',
       Type: 'json',
       KEY: process.env.NEIS_API_KEY,
     })
@@ -164,26 +165,23 @@ export default async function handler(request: VercelRequest, response: VercelRe
       params.append('MLSV_TO_YMD', (endDate as string).replace(/-/g, ''))
     }
 
-    const result: NeisMealResponse = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
-      .then((res) => res.json())
-      .catch((err) => {
-        console.error(err)
-        return response.status(500).json({
-          error: {
-            code: 500,
-            message: '데이터를 불러오는 데 실패했습니다.',
-          },
+    const fetchPage = async (pageIndex: number): Promise<NeisMealResponse | null> => {
+      const pageParams = new URLSearchParams(params)
+      if (pageIndex > 1) {
+        pageParams.set('pIndex', pageIndex.toString())
+      }
+
+      return fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${pageParams.toString()}`)
+        .then((res) => res.json())
+        .catch((err) => {
+          console.error(`Error fetching page ${pageIndex}:`, err)
+          return null
         })
-      })
+    }
 
-    // 상태 오류 처리
-    const status =
-      'mealServiceDietInfo' in result ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
-
-    const statusResult = handleNeisStatus(status)
-    if (statusResult) return response.status(statusResult.status).json(statusResult.body)
-    if (status === 'INFO-200') return response.status(200).json([])
-    if (!('mealServiceDietInfo' in result)) {
+    // 첫 번째 페이지 데이터 가져오기
+    const firstPageResult = await fetchPage(1)
+    if (!firstPageResult) {
       return response.status(500).json({
         error: {
           code: 500,
@@ -192,12 +190,52 @@ export default async function handler(request: VercelRequest, response: VercelRe
       })
     }
 
-    const data = result.mealServiceDietInfo[1].row
+    // 상태 오류 처리
+    const status =
+      'mealServiceDietInfo' in firstPageResult
+        ? firstPageResult.mealServiceDietInfo[0].head[1].RESULT.CODE
+        : firstPageResult.RESULT?.CODE
+
+    const statusResult = handleNeisStatus(status)
+    if (statusResult) return response.status(statusResult.status).json(statusResult.body)
+    if (status === 'INFO-200') return response.status(200).json([])
+    if (!('mealServiceDietInfo' in firstPageResult)) {
+      return response.status(500).json({
+        error: {
+          code: 500,
+          message: '데이터를 불러오는 데 실패했습니다.',
+        },
+      })
+    }
+
+    // 전체 데이터 수 확인
+    const totalCount = firstPageResult.mealServiceDietInfo[0].head[0].list_total_count
+    const totalPages = Math.ceil(totalCount / 1000)
+
+    let allData = [...firstPageResult.mealServiceDietInfo[1].row]
+
+    // 페이지가 더 필요할 경우 병렬로 가져오기
+    if (totalPages > 1) {
+      const additionalPagePromises: Promise<NeisMealResponse | null>[] = []
+
+      for (let pageIndex = 2; pageIndex <= totalPages; pageIndex++) {
+        additionalPagePromises.push(fetchPage(pageIndex))
+      }
+
+      const additionalPageResults = await Promise.all(additionalPagePromises)
+
+      // 데이터 합치기
+      for (const pageResult of additionalPageResults) {
+        if (pageResult && 'mealServiceDietInfo' in pageResult) {
+          allData = [...allData, ...pageResult.mealServiceDietInfo[1].row]
+        }
+      }
+    }
 
     // 날짜별로 급식 데이터 모으기
     const mealsByDate: Record<string, NeisMealResponseRow[]> = {}
 
-    for (const meal of data) {
+    for (const meal of allData) {
       const formattedDate = `${meal.MLSV_YMD.slice(0, 4)}-${meal.MLSV_YMD.slice(4, 6)}-${meal.MLSV_YMD.slice(6, 8)}`
 
       if (!mealsByDate[formattedDate]) {
