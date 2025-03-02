@@ -182,10 +182,17 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const statusResult = handleNeisStatus(status)
     if (statusResult) return response.status(statusResult.status).json(statusResult.body)
-
     if (status === 'INFO-200') return response.status(200).json([])
+    if (!('mealServiceDietInfo' in result)) {
+      return response.status(500).json({
+        error: {
+          code: 500,
+          message: '데이터를 불러오는 데 실패했습니다.',
+        },
+      })
+    }
 
-    const data = 'mealServiceDietInfo' in result ? result.mealServiceDietInfo[1].row : []
+    const data = result.mealServiceDietInfo[1].row
 
     // 날짜별로 급식 데이터 모으기
     const mealsByDate: Record<string, NeisMealResponseRow[]> = {}
