@@ -17,17 +17,11 @@ type MealResponse = {
   }[]
 }[]
 
-type DateQuery = {
-  date?: string
-  startDate?: string
-  endDate?: string
-}
-
 function validateDate(date: string) {
   return /^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date)
 }
 
-function validateQueries(province: string, school: string, { date, startDate, endDate }: DateQuery) {
+function validateQueries(province: string, school: string, { date, startDate, endDate }) {
   if (!province || !school) return false
   if (!/^[A-Z]\d{2}$/.test(province) || !/^\d+$/.test(school)) return false
 
