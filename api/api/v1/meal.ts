@@ -154,15 +154,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
   const { province, school, date, startDate, endDate } = request.query
 
   try {
-    if (!process.env.NEIS_API_KEY) {
-      response.status(500).json({
-        error: {
-          code: 500,
-          message: 'NEIS_API_KEY is not defined',
-        },
-      })
-      return
-    }
+    if (!process.env.NEIS_API_KEY) throw new Error('NEIS_API_KEY is not defined')
 
     // 쿼리 검증
     if (
