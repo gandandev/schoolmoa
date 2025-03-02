@@ -45,48 +45,24 @@ export function validateQueries(province: string, school: string, { date, startD
 }
 
 export function handleNeisStatus(status: string) {
-  if (status === 'ERROR-300') {
-    return {
-      status: 400,
-      body: {
-        error: {
-          code: 400,
-          message: '쿼리가 누락되었습니다.',
-        },
-      },
-    }
-  } else if (
-    status === 'ERROR-290' ||
-    status === 'ERROR-310' ||
-    status === 'ERROR-333' ||
-    status === 'ERROR-336' ||
-    status === 'ERROR-500' ||
-    status === 'ERROR-600' ||
-    status === 'ERROR-601' ||
-    status === 'INFO-300'
-  ) {
-    return {
-      status: 400,
-      body: {
-        error: {
-          code: 500,
-          message: '데이터를 불러오는 데 실패했습니다.',
-        },
-      },
-    }
-  } else if (status === 'ERROR-337') {
-    return {
-      status: 429,
-      body: {
-        error: {
-          code: 429,
-          message: '오늘 호출 횟수를 초과했습니다.',
-        },
-      },
-    }
+  if (status === 'INFO-000') return null
+  if (status === 'INFO-200') return { status: 200, body: [] }
+
+  const statusMap = {
+    'ERROR-300': { code: 400, message: '쿼리가 누락되었습니다.' },
+    'ERROR-337': { code: 429, message: '오늘 호출 횟수를 초과했습니다.' },
   }
 
-  return null
+  const mappedStatus = statusMap[status] || { code: 500, message: '데이터를 불러오는 데 실패했습니다.' }
+  return {
+    status: mappedStatus.code,
+    body: {
+      error: {
+        code: mappedStatus.code,
+        message: mappedStatus.message,
+      },
+    },
+  }
 }
 
 export function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
