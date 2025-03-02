@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import 'dotenv/config'
+import type { NeisMealResponse } from '../../types/neis'
 
 type MealResponse = {
   date: string
@@ -167,7 +168,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       params.append('MLSV_TO_YMD', (endDate as string).replace(/-/g, ''))
     }
 
-    const result = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
+    const result: NeisMealResponse = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
       .then((res) => res.json())
       .catch((err) => {
         console.error(err)
@@ -181,11 +182,12 @@ export default async function handler(request: VercelRequest, response: VercelRe
       })
 
     // 상태 오류 처리
-    const status = result.mealServiceDietInfo ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
+    const status =
+      'mealServiceDietInfo' in result ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
     handleNeisStatus(response, status)
     if (status === 'INFO-200') return response.status(200).json([])
 
-    const data = result.mealServiceDietInfo[1].row
+    const data = 'mealServiceDietInfo' in result ? result.mealServiceDietInfo[1].row : []
 
     // 날짜별로 급식 데이터 모으기
     const mealsByDate: Record<string, Record<string, string>[]> = {}
