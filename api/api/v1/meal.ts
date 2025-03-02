@@ -155,7 +155,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const params = new URLSearchParams({
       ATPT_OFCDC_SC_CODE: province as string,
       SD_SCHUL_CODE: school as string,
-      pSize: PAGE_SIZE,
+      pSize: String(PAGE_SIZE),
       Type: 'json',
       KEY: process.env.NEIS_API_KEY,
     })
