@@ -21,11 +21,13 @@ type MealResponse = {
 }[]
 
 export function validateDate(date: string) {
+  // YYYYMMDD 또는 YYYY-MM-DD 형식
   return /^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date)
 }
 
 export function validateQueries(province: string, school: string, { date, startDate, endDate }) {
   if (!province || !school) return false
+  // A00, 000000... 형식
   if (!/^[A-Z]\d{2}$/.test(province) || !/^\d+$/.test(school)) return false
 
   // 한 날짜 또는 날짜 범위 중 하나는 반드시 있어야 함
@@ -69,10 +71,18 @@ export function handleNeisStatus(status: string) {
 
 export function formatMeal(meal: NeisMealResponseRow): MealResponse[number]['meals'][number] {
   const menu = meal.DDISH_NM.split('<br/>').map((m) => {
+    const item = m.trim()
+
     // 형식 1: 메뉴이름 (1.2.3.)
     // 헝식 2: 메뉴이름1.2.3.
-    const item = m.trim()
+    // \s*       공백 제거
+    // (.*?)     메뉴 이름, ?로 뒤의 알레르기 정보까지 선택되지 않도록 게으르게 조정
+    // \s*       공백 제거
+    // \(?       여는 괄호, 없을 수 있음
+    // [0-9. ]+  알레르기 정보: 숫자 + 점 + 공백
+    // \)?       닫는 괄호, 없을 수 있음
     const match = item.match(/^\s*(.*?)\s*\(?([0-9. ]+)\)?$/)
+
     if (match) {
       const [, name, allergenStr] = match
       if (allergenStr) {
@@ -105,12 +115,12 @@ export function formatMeal(meal: NeisMealResponseRow): MealResponse[number]['mea
   const nutrition = meal.NTR_INFO
     ? meal.NTR_INFO.split('<br/>').reduce(
         (acc, curr) => {
-          if (!curr) return acc
+          if (!curr) return acc // 빈 문자열이면 건너뜀
           const parts = curr.split(':')
           if (parts.length < 2) return acc
           const [key, value] = parts
-          const name = key.replace(/\([^)]*\)/g, '').trim()
-          acc[name] = `${Number(value)}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
+          const name = key.replace(/\([^)]*\)/g, '').trim() // 단위 괄호 제거
+          acc[name] = `${Number(value)}${key.match(/\(([^)]+)\)/)?.[1] || ''}` // 값 + 단위 형식으로 저장
           return acc
         },
         {} as Record<string, string>,
@@ -160,6 +170,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       KEY: process.env.NEIS_API_KEY,
     })
 
+    // YYYYMMDD 형식으로 변환(- 제거) 후 쿼리에 추가
     if (date) {
       params.append('MLSV_YMD', (date as string).replace(/-/g, ''))
     } else {
