@@ -44,14 +44,17 @@ function validateQueries(province: string, school: string, { date, startDate, en
   return false
 }
 
-function handleNeisStatus(response: VercelResponse, status: string) {
+function handleNeisStatus(status: string) {
   if (status === 'ERROR-300') {
-    return response.status(400).json({
-      error: {
-        code: 400,
-        message: '쿼리가 누락되었습니다.',
+    return {
+      status: 400,
+      body: {
+        error: {
+          code: 400,
+          message: '쿼리가 누락되었습니다.',
+        },
       },
-    })
+    }
   } else if (
     status === 'ERROR-290' ||
     status === 'ERROR-310' ||
@@ -62,20 +65,28 @@ function handleNeisStatus(response: VercelResponse, status: string) {
     status === 'ERROR-601' ||
     status === 'INFO-300'
   ) {
-    return response.status(400).json({
-      error: {
-        code: 500,
-        message: '데이터를 불러오는 데 실패했습니다.',
+    return {
+      status: 400,
+      body: {
+        error: {
+          code: 500,
+          message: '데이터를 불러오는 데 실패했습니다.',
+        },
       },
-    })
+    }
   } else if (status === 'ERROR-337') {
-    return response.status(429).json({
-      error: {
-        code: 429,
-        message: '오늘 호출 횟수를 초과했습니다.',
+    return {
+      status: 429,
+      body: {
+        error: {
+          code: 429,
+          message: '오늘 호출 횟수를 초과했습니다.',
+        },
       },
-    })
+    }
   }
+
+  return null
 }
 
 function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
@@ -134,7 +145,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   try {
     if (!process.env.NEIS_API_KEY) {
-      throw new Error('NEIS_API_KEY is not defined')
+      response.status(500).json({
+        error: {
+          code: 500,
+          message: 'NEIS_API_KEY is not defined',
+        },
+      })
+      return
     }
 
     // 쿼리 검증
@@ -145,12 +162,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
         endDate: endDate as string,
       })
     ) {
-      return response.status(400).json({
+      response.status(400).json({
         error: {
           code: 400,
           message: '쿼리가 잘못되었습니다.',
         },
       })
+      return
     }
 
     // 나이스 API 쿼리 생성
@@ -168,24 +186,35 @@ export default async function handler(request: VercelRequest, response: VercelRe
       params.append('MLSV_TO_YMD', (endDate as string).replace(/-/g, ''))
     }
 
-    const result: NeisMealResponse = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
-      .then((res) => res.json())
-      .catch((err) => {
-        console.error(err)
-
-        return response.status(500).json({
-          error: {
-            code: 500,
-            message: '데이터를 불러오는 데 실패했습니다.',
-          },
-        })
+    let result: NeisMealResponse
+    try {
+      const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
+      result = await res.json()
+    } catch (err) {
+      console.error(err)
+      response.status(500).json({
+        error: {
+          code: 500,
+          message: '데이터를 불러오는 데 실패했습니다.',
+        },
       })
+      return
+    }
 
     // 상태 오류 처리
     const status =
       'mealServiceDietInfo' in result ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
-    handleNeisStatus(response, status)
-    if (status === 'INFO-200') return response.status(200).json([])
+
+    const statusResult = handleNeisStatus(status)
+    if (statusResult) {
+      response.status(statusResult.status).json(statusResult.body)
+      return
+    }
+
+    if (status === 'INFO-200') {
+      response.status(200).json([])
+      return
+    }
 
     const data = 'mealServiceDietInfo' in result ? result.mealServiceDietInfo[1].row : []
 
@@ -208,11 +237,10 @@ export default async function handler(request: VercelRequest, response: VercelRe
       meals: dateMeals.map(formatMeal),
     }))
 
-    return response.status(200).json(meals)
+    response.status(200).json(meals)
   } catch (err) {
     console.error(err)
-
-    return response.status(500).json({
+    response.status(500).json({
       error: {
         code: 500,
         message: '서버 오류가 발생했습니다.',
