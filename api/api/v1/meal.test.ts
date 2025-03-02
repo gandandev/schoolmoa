@@ -335,13 +335,21 @@ describe('나이스 상태 코드 처리', () => {
 describe('급식 데이터 정리', () => {
   test('메뉴 및 알레르기 정보 파싱', () => {
     const mockMeal = {
+      ATPT_OFCDC_SC_CODE: 'B10',
+      ATPT_OFCDC_SC_NM: '서울특별시',
+      SD_SCHUL_CODE: '7010084',
+      SCHUL_NM: '서울과학고등학교',
       MMEAL_SC_NM: '중식',
       MMEAL_SC_CODE: '2',
-      MLSV_FGR: '206',
+      MLSV_YMD: '20240320',
+      MLSV_FGR: 206,
       DDISH_NM: '맑은콩나물국 (5.6)<br/>지코바치밥 (1.2.5.12.15)<br/>깍두기 (9)',
       ORPLC_INFO: '돼지고기 : 국내산<br/>쌀 : 국내산',
       CAL_INFO: '596.5 Kcal',
       NTR_INFO: '탄수화물(g) : 75.1<br/>단백질(g) : 30.9<br/>지방(g) : 17.8',
+      MLSV_FROM_YMD: '',
+      MLSV_TO_YMD: '',
+      LOAD_DTM: '',
     }
 
     const formatted = formatMeal(mockMeal)
@@ -373,13 +381,21 @@ describe('급식 데이터 정리', () => {
 
   test('알레르기 정보가 없는 메뉴 처리', () => {
     const mockMeal = {
+      ATPT_OFCDC_SC_CODE: 'B10',
+      ATPT_OFCDC_SC_NM: '서울특별시',
+      SD_SCHUL_CODE: '7010084',
+      SCHUL_NM: '서울과학고등학교',
       MMEAL_SC_NM: '중식',
       MMEAL_SC_CODE: '2',
-      MLSV_FGR: '206',
+      MLSV_YMD: '20240320',
+      MLSV_FGR: 206,
       DDISH_NM: '맑은콩나물국<br/>지코바치밥<br/>깍두기',
       ORPLC_INFO: '돼지고기 : 국내산<br/>쌀 : 국내산',
       CAL_INFO: '596.5 Kcal',
       NTR_INFO: '탄수화물(g) : 75.1<br/>단백질(g) : 30.9<br/>지방(g) : 17.8',
+      MLSV_FROM_YMD: '',
+      MLSV_TO_YMD: '',
+      LOAD_DTM: '',
     }
 
     const formatted = formatMeal(mockMeal)
@@ -392,13 +408,21 @@ describe('급식 데이터 정리', () => {
 
   test('다양한 괄호 형식의 알레르기 정보 처리', () => {
     const mockMeal = {
+      ATPT_OFCDC_SC_CODE: 'B10',
+      ATPT_OFCDC_SC_NM: '서울특별시',
+      SD_SCHUL_CODE: '7010084',
+      SCHUL_NM: '서울과학고등학교',
       MMEAL_SC_NM: '중식',
       MMEAL_SC_CODE: '2',
-      MLSV_FGR: '206',
+      MLSV_YMD: '20240320',
+      MLSV_FGR: 206,
       DDISH_NM: '맑은콩나물국(5.6)<br/>지코바치밥 (1.2.5)<br/>깍두기(9)',
       ORPLC_INFO: '돼지고기 : 국내산<br/>쌀 : 국내산',
       CAL_INFO: '596.5 Kcal',
       NTR_INFO: '탄수화물(g) : 75.1<br/>단백질(g) : 30.9<br/>지방(g) : 17.8',
+      MLSV_FROM_YMD: '',
+      MLSV_TO_YMD: '',
+      LOAD_DTM: '',
     }
 
     const formatted = formatMeal(mockMeal)
@@ -411,13 +435,21 @@ describe('급식 데이터 정리', () => {
 
   test('빈 원산지와 영양정보 처리', () => {
     const mockMeal = {
+      ATPT_OFCDC_SC_CODE: 'B10',
+      ATPT_OFCDC_SC_NM: '서울특별시',
+      SD_SCHUL_CODE: '7010084',
+      SCHUL_NM: '서울과학고등학교',
       MMEAL_SC_NM: '중식',
       MMEAL_SC_CODE: '2',
-      MLSV_FGR: '206',
+      MLSV_YMD: '20240320',
+      MLSV_FGR: 206,
       DDISH_NM: '맑은콩나물국(5.6)',
       ORPLC_INFO: '',
       CAL_INFO: '596.5 Kcal',
       NTR_INFO: '',
+      MLSV_FROM_YMD: '',
+      MLSV_TO_YMD: '',
+      LOAD_DTM: '',
     }
 
     const formatted = formatMeal(mockMeal)
