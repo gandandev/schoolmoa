@@ -18,11 +18,11 @@ type MealResponse = {
   }[]
 }[]
 
-function validateDate(date: string) {
+export function validateDate(date: string) {
   return /^\d{4}(-\d{2}){2}$|^\d{8}$/.test(date)
 }
 
-function validateQueries(province: string, school: string, { date, startDate, endDate }) {
+export function validateQueries(province: string, school: string, { date, startDate, endDate }) {
   if (!province || !school) return false
   if (!/^[A-Z]\d{2}$/.test(province) || !/^\d+$/.test(school)) return false
 
@@ -44,7 +44,7 @@ function validateQueries(province: string, school: string, { date, startDate, en
   return false
 }
 
-function handleNeisStatus(status: string) {
+export function handleNeisStatus(status: string) {
   if (status === 'ERROR-300') {
     return {
       status: 400,
@@ -89,7 +89,7 @@ function handleNeisStatus(status: string) {
   return null
 }
 
-function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
+export function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
   const menu = meal.DDISH_NM.split('<br/>').map((m) => {
     // 형식 1: 메뉴이름 (1.2.3.)
     // 헝식 2: 메뉴이름1.2.3.
@@ -109,14 +109,19 @@ function formatMeal(meal: Record<string, string>): MealResponse[number]['meals']
   })
 
   // 돼지고기 : 국내산 -> { '돼지고기': '국내산' }
-  const origin = meal.ORPLC_INFO.split('<br/>').reduce(
-    (acc, curr) => {
-      const [key, value] = curr.split(':')
-      acc[key.trim()] = value.trim()
-      return acc
-    },
-    {} as Record<string, string>,
-  )
+  const origin = meal.ORPLC_INFO
+    ? meal.ORPLC_INFO.split('<br/>').reduce(
+        (acc, curr) => {
+          if (!curr) return acc
+          const parts = curr.split(':')
+          if (parts.length < 2) return acc
+          const [key, value] = parts
+          acc[key.trim()] = value.trim()
+          return acc
+        },
+        {} as Record<string, string>,
+      )
+    : {}
 
   // 탄수화물(g) : 139.0 -> { '탄수화물': '139.0g' }
   const nutrition = meal.NTR_INFO.split('<br/>').reduce(
