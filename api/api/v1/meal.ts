@@ -124,15 +124,20 @@ export function formatMeal(meal: Record<string, string>): MealResponse[number]['
     : {}
 
   // 탄수화물(g) : 139.0 -> { '탄수화물': '139.0g' }
-  const nutrition = meal.NTR_INFO.split('<br/>').reduce(
-    (acc, curr) => {
-      const [key, value] = curr.split(':')
-      const name = key.replace(/\([^)]*\)/g, '').trim()
-      acc[name] = `${Number(value)}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
-      return acc
-    },
-    {} as Record<string, string>,
-  )
+  const nutrition = meal.NTR_INFO
+    ? meal.NTR_INFO.split('<br/>').reduce(
+        (acc, curr) => {
+          if (!curr) return acc
+          const parts = curr.split(':')
+          if (parts.length < 2) return acc
+          const [key, value] = parts
+          const name = key.replace(/\([^)]*\)/g, '').trim()
+          acc[name] = `${Number(value)}${key.match(/\(([^)]+)\)/)?.[1] || ''}`
+          return acc
+        },
+        {} as Record<string, string>,
+      )
+    : {}
 
   return {
     type: meal.MMEAL_SC_NM,
