@@ -188,35 +188,26 @@ export default async function handler(request: VercelRequest, response: VercelRe
       params.append('MLSV_TO_YMD', (endDate as string).replace(/-/g, ''))
     }
 
-    let result: NeisMealResponse
-    try {
-      const res = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
-      result = await res.json()
-    } catch (err) {
-      console.error(err)
-      response.status(500).json({
-        error: {
-          code: 500,
-          message: '데이터를 불러오는 데 실패했습니다.',
-        },
+    const result: NeisMealResponse = await fetch(`https://open.neis.go.kr/hub/mealServiceDietInfo?${params.toString()}`)
+      .then((res) => res.json())
+      .catch((err) => {
+        console.error(err)
+        return response.status(500).json({
+          error: {
+            code: 500,
+            message: '데이터를 불러오는 데 실패했습니다.',
+          },
+        })
       })
-      return
-    }
 
     // 상태 오류 처리
     const status =
       'mealServiceDietInfo' in result ? result.mealServiceDietInfo[0].head[1].RESULT.CODE : result.RESULT.CODE
 
     const statusResult = handleNeisStatus(status)
-    if (statusResult) {
-      response.status(statusResult.status).json(statusResult.body)
-      return
-    }
+    if (statusResult) return response.status(statusResult.status).json(statusResult.body)
 
-    if (status === 'INFO-200') {
-      response.status(200).json([])
-      return
-    }
+    if (status === 'INFO-200') return response.status(200).json([])
 
     const data = 'mealServiceDietInfo' in result ? result.mealServiceDietInfo[1].row : []
 
