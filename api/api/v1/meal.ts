@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import 'dotenv/config'
-import type { NeisMealResponse } from '../../types/neis'
+import type { NeisMealResponse, NeisMealResponseRow } from '../../types/neis'
 
 type MealResponse = {
   date: string
@@ -65,7 +65,7 @@ export function handleNeisStatus(status: string) {
   }
 }
 
-export function formatMeal(meal: Record<string, string>): MealResponse[number]['meals'][number] {
+export function formatMeal(meal: NeisMealResponseRow): MealResponse[number]['meals'][number] {
   const menu = meal.DDISH_NM.split('<br/>').map((m) => {
     // 형식 1: 메뉴이름 (1.2.3.)
     // 헝식 2: 메뉴이름1.2.3.
@@ -188,7 +188,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const data = 'mealServiceDietInfo' in result ? result.mealServiceDietInfo[1].row : []
 
     // 날짜별로 급식 데이터 모으기
-    const mealsByDate: Record<string, Record<string, string>[]> = {}
+    const mealsByDate: Record<string, NeisMealResponseRow[]> = {}
 
     for (const meal of data) {
       const formattedDate = `${meal.MLSV_YMD.slice(0, 4)}-${meal.MLSV_YMD.slice(4, 6)}-${meal.MLSV_YMD.slice(6, 8)}`

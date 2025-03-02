@@ -1,20 +1,18 @@
-export type NeisResponseBase<T> = {
-  mealServiceDietInfo: [
-    {
-      head: [
-        {
-          list_total_count: number
-        },
-        {
-          RESULT: NeisStatus
-        },
-      ]
-    },
-    {
-      row: T[]
-    },
-  ]
-}
+export type NeisResponseBase<T> = [
+  {
+    head: [
+      {
+        list_total_count: number
+      },
+      {
+        RESULT: NeisStatus
+      },
+    ]
+  },
+  {
+    row: T[]
+  },
+]
 
 export type NeisErrorOnlyResponse = {
   RESULT: NeisStatus
