@@ -32,6 +32,6 @@ export const server = setupServer(
   }),
 )
 
-export const startServer = () => server.listen()
+export const startServer = () => server.listen({ onUnhandledRequest: 'bypass' }) // 테스트용 express 서버에 들어오는 요청은 무시
 export const resetServer = () => server.resetHandlers()
 export const closeServer = () => server.close()
