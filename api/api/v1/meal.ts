@@ -27,9 +27,8 @@ export function validateDate(date: string) {
 
 export function validateQueries(province: string, school: string, { date, startDate, endDate }) {
   if (!province || !school) return false
-  // A00, 0000000 형식
-  // TODO: 더 자세한 검증 방법 사용
-  if (!/^[A-Z]\d{2}$/.test(province) || !/^\d{7}$/.test(school)) return false
+  // B10, 1234567 형식
+  if (!/^[BCDEFGHIJKMNPQRSTV]10$/.test(province) || !/^\d{7}$/.test(school)) return false
 
   // 한 날짜 또는 날짜 범위 중 하나는 반드시 있어야 함
   if (!date && (!startDate || !endDate)) return false
