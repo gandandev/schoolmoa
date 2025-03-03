@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import 'dotenv/config'
 import type { NeisMealResponse, NeisMealResponseRow } from '../../types/neis'
 import { validateDefaultQueries } from '../../utils/validation'
+import { handleNeisStatus } from '../../utils/neis'
 
 const PAGE_SIZE = 1000
 
@@ -20,27 +21,6 @@ export type MealResponse = {
     nutrition: Record<string, string>
   }[]
 }[]
-
-export function handleNeisStatus(status: string) {
-  if (status === 'INFO-000') return null
-  if (status === 'INFO-200') return { status: 200, body: [] }
-
-  const statusMap = {
-    'ERROR-300': { code: 400, message: '쿼리가 누락되었습니다.' },
-    'ERROR-337': { code: 429, message: '오늘 호출 횟수를 초과했습니다.' },
-  }
-
-  const mappedStatus = statusMap[status] || { code: 500, message: '데이터를 불러오는 데 실패했습니다.' }
-  return {
-    status: mappedStatus.code,
-    body: {
-      error: {
-        code: mappedStatus.code,
-        message: mappedStatus.message,
-      },
-    },
-  }
-}
 
 export function formatMeal(meal: NeisMealResponseRow): MealResponse[number]['meals'][number] {
   const menu = meal.DDISH_NM.split('<br/>').map((m) => {
