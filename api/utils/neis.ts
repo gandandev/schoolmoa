@@ -1,3 +1,8 @@
+/**
+ * 나이스 API 상태 코드 처리
+ * @param status 상태 코드
+ * @returns 알맞는 API 응답 내용
+ */
 export function handleNeisStatus(status: string) {
   if (status === 'INFO-000') return null
   if (status === 'INFO-200') return { status: 200, body: [] }

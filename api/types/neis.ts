@@ -1,3 +1,7 @@
+/**
+ * 나이스 API 기본 응답 형식
+ * @param T 응답 데이터 타입
+ */
 export type NeisResponseBase<T> = [
   {
     head: [
@@ -14,10 +18,17 @@ export type NeisResponseBase<T> = [
   },
 ]
 
+/**
+ * 나이스 API 오류 응답 형식
+ * @param RESULT 상태 코드
+ */
 export type NeisErrorOnlyResponse = {
   RESULT: NeisStatus
 }
 
+/**
+ * 모든 나이스 API 상태 코드
+ */
 export type NeisStatus = {
   CODE:
     | 'INFO-000'
@@ -37,12 +48,18 @@ export type NeisStatus = {
   MESSAGE: string
 }
 
+/**
+ * 나이스 급식식단정보 API 응답 형식
+ */
 export type NeisMealResponse =
   | {
       mealServiceDietInfo: NeisResponseBase<NeisMealResponseRow>
     }
   | NeisErrorOnlyResponse
 
+/**
+ * 급식 응답 형식 행
+ */
 export type NeisMealResponseRow = {
   ATPT_OFCDC_SC_CODE: string
   ATPT_OFCDC_SC_NM: string

@@ -6,6 +6,9 @@ import { handleNeisStatus } from '../../utils/neis'
 
 const PAGE_SIZE = 1000
 
+/**
+ * /api/v1/meal 응답 형식
+ */
 export type MealResponse = {
   date: string
   meals: {
@@ -22,6 +25,11 @@ export type MealResponse = {
   }[]
 }[]
 
+/**
+ * 나이스 급식식단정보 API 응답 형식 개선
+ * @param meal 나이스 급식식단정보 API 응답
+ * @returns 개선된 급식 응답 형식
+ */
 export function formatMeal(meal: NeisMealResponseRow): MealResponse[number]['meals'][number] {
   const menu = meal.DDISH_NM.split('<br/>').map((m) => {
     const item = m.trim()
