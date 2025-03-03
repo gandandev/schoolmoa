@@ -3,7 +3,7 @@ import request from 'supertest'
 import express from 'express'
 import type { Request, Response } from 'express'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import handler from './meal'
+import handler, { MealResponse } from './meal'
 import { validateDate, validateQueries, handleNeisStatus, formatMeal } from './meal'
 import { startServer, resetServer, closeServer } from './__mocks__/mealServer'
 import {
@@ -458,5 +458,48 @@ describe('급식 데이터 정리', () => {
     expect(formatted.menu[0]).toEqual({ name: '맑은콩나물국', allergens: [5, 6] })
     expect(formatted.origin).toEqual({})
     expect(formatted.nutrition).toEqual({})
+  })
+})
+
+describe('페이지네이션 처리', () => {
+  test('1000개 이상 데이터 처리', async () => {
+    const largeMealSchema = expect.arrayContaining([
+      expect.objectContaining({
+        date: expect.any(String),
+        meals: expect.arrayContaining([
+          expect.objectContaining({
+            type: expect.any(String),
+            typeCode: expect.any(Number),
+            menu: expect.arrayContaining([
+              expect.objectContaining({
+                name: expect.any(String),
+                allergens: expect.any(Array),
+              }),
+            ]),
+            headCount: expect.any(Number),
+            origin: expect.any(Object),
+            calorie: expect.any(Number),
+            nutrition: expect.any(Object),
+          }),
+        ]),
+      }),
+    ])
+
+    const response = await request(app).get('/api/v1/meal').query({
+      province: 'J10',
+      school: '7530539',
+      startDate: '2022-01-01',
+      endDate: '2025-01-01',
+    })
+
+    expect(response.status).toBe(200)
+    expect(response.type).toBe('application/json')
+    expect(Array.isArray(response.body)).toBe(true)
+    expect(response.body).toEqual(largeMealSchema)
+    expect(response.body.length).toBe(1096)
+
+    // 날짜 순서
+    const dates = response.body.map((item: MealResponse[number]) => item.date)
+    expect(dates).toEqual([...dates].sort())
   })
 })

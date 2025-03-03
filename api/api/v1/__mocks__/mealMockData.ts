@@ -1,6 +1,113 @@
+import type { NeisMealResponseRow, NeisMealResponse } from '../../../types/neis'
+import { differenceInDays } from 'date-fns'
+
+function generatePagedMockData(
+  pageIndex: number,
+  pageSize: number,
+  startDate: string,
+  endDate: string,
+  mealTypesInADay: {
+    code: 1 | 2 | 3
+    type: '조식' | '중식' | '석식'
+  }[],
+  {
+    provinceCode,
+    provinceName,
+    schoolCode,
+    schoolName,
+    headCount,
+    meal,
+    origin,
+    calorie,
+    nutrition,
+  }: {
+    provinceCode: string
+    provinceName: string
+    schoolCode: string
+    schoolName: string
+    headCount: number
+    meal: string
+    origin: string
+    calorie: number
+    nutrition: string
+  },
+): NeisMealResponse {
+  // YYYYMMDD 형식으로는 Date 객체를 생성할 수 없어 YYYY-MM-DD 형식으로 변환
+  const formattedStartDate = startDate.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+  const formattedEndDate = endDate.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3')
+
+  const daysBetweenDates = Math.abs(differenceInDays(new Date(formattedStartDate), new Date(formattedEndDate)))
+  const totalCount = Math.max(1, daysBetweenDates * mealTypesInADay.length)
+
+  const dataRow: NeisMealResponseRow[] = []
+  const itemsToGenerate = Math.min(pageSize, totalCount - (pageIndex - 1) * pageSize)
+
+  for (let i = 0; i < itemsToGenerate; i++) {
+    const itemIndex = (pageIndex - 1) * pageSize + i
+    const dayOffset = Math.floor(itemIndex / mealTypesInADay.length)
+    const currentDate = new Date(formattedStartDate)
+    currentDate.setDate(currentDate.getDate() + dayOffset)
+    const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '')
+
+    dataRow.push({
+      ATPT_OFCDC_SC_CODE: provinceCode,
+      ATPT_OFCDC_SC_NM: provinceName,
+      SD_SCHUL_CODE: schoolCode,
+      SCHUL_NM: schoolName,
+      MMEAL_SC_CODE: mealTypesInADay[itemIndex % mealTypesInADay.length].code.toString(),
+      MMEAL_SC_NM: mealTypesInADay[itemIndex % mealTypesInADay.length].type,
+      MLSV_YMD: formattedDate,
+      MLSV_FGR: headCount,
+      DDISH_NM: meal,
+      ORPLC_INFO: origin,
+      CAL_INFO: `${calorie} Kcal`,
+      NTR_INFO: nutrition,
+      MLSV_FROM_YMD: startDate,
+      MLSV_TO_YMD: endDate,
+      LOAD_DTM: endDate,
+    })
+  }
+
+  return {
+    mealServiceDietInfo: [
+      {
+        head: [{ list_total_count: totalCount }, { RESULT: { CODE: 'INFO-000', MESSAGE: '정상 처리되었습니다.' } }],
+      },
+      {
+        row: dataRow,
+      },
+    ],
+  }
+}
+
+const longMockData = (pageIndex: number) =>
+  generatePagedMockData(
+    pageIndex,
+    1000,
+    '20220101',
+    '20250101',
+    [
+      { code: 1, type: '조식' },
+      { code: 2, type: '중식' },
+    ],
+    {
+      provinceCode: 'J10',
+      provinceName: '경기도교육청',
+      schoolCode: '7530539',
+      schoolName: '한국조리과학고등학교',
+      headCount: 879,
+      meal: '현미밥 <br/>고기된장찌개3 (5.6.9.16.18)<br/>야채계란찜 (1.9.13)<br/>연탄불고기 (10)<br/>배추겉절이** (9)<br/>요구르트 (2)<br/>앙버터모닝빵 (1.2.5.6)',
+      origin:
+        '쇠고기(종류) : 국내산(한우)<br/>쇠고기 식육가공품 : 국내산<br/>돼지고기 : 국내산<br/>돼지고기 식육가공품 : 국내산<br/>닭고기 : <br/>닭고기 식육가공품 : <br/>오리고기 : <br/>오리고기 가공품 : <br/>쌀 : 국내산<br/>배추 : 국내산<br/>고춧가루 : 국내산<br/>콩 : 국내산<br/>낙지 : <br/>고등어 : <br/>갈치 : <br/>오징어 : <br/>꽃게 : <br/>참조기 : <br/>비고 : ',
+      calorie: 897.1,
+      nutrition:
+        '탄수화물(g) : 118.0<br/>단백질(g) : 55.4<br/>지방(g) : 20.4<br/>비타민A(R.E) : 156.4<br/>티아민(mg) : 1.2<br/>리보플라빈(mg) : 0.7<br/>비타민C(mg) : 18.0<br/>칼슘(mg) : 1249.9<br/>철분(mg) : 4.6',
+    },
+  )
+
 export const mockDataMap = {
   // 대구대성초등학교 2024-03-20
-  'D10:7261044:20240320': {
+  'D10:7261044:20240320:1:1000': {
     mealServiceDietInfo: [
       { head: [{ list_total_count: 1 }, { RESULT: { CODE: 'INFO-000', MESSAGE: '정상 처리되었습니다.' } }] },
       {
@@ -31,7 +138,7 @@ export const mockDataMap = {
   },
 
   // 서울과학고등학교 2024-03-15
-  'B10:7010084:20240315': {
+  'B10:7010084:20240315:1:1000': {
     mealServiceDietInfo: [
       { head: [{ list_total_count: 2 }, { RESULT: { CODE: 'INFO-000', MESSAGE: '정상 처리되었습니다.' } }] },
       {
@@ -82,12 +189,12 @@ export const mockDataMap = {
   },
 
   // 제주제일고등학교부설방송통신고등학교 2025-01-20 (데이터 없음)
-  'T10:9290079:20250120': {
+  'T10:9290079:20250120:1:1000': {
     RESULT: { CODE: 'INFO-200', MESSAGE: '해당하는 데이터가 없습니다.' },
   },
 
   // 정라초등학교 2024-03-18 ~ 2024-03-22
-  'K10:7872032:20240318:20240322': {
+  'K10:7872032:20240318:20240322:1:1000': {
     mealServiceDietInfo: [
       { head: [{ list_total_count: 5 }, { RESULT: { CODE: 'INFO-000', MESSAGE: '정상 처리되었습니다.' } }] },
       {
@@ -196,6 +303,11 @@ export const mockDataMap = {
       },
     ],
   },
+
+  // 한국조리과학고등학교 2022-01-01~2025-01-01
+  'J10:7530539:20220101:20250101:1:1000': longMockData(1),
+  'J10:7530539:20220101:20250101:2:1000': longMockData(2),
+  'J10:7530539:20220101:20250101:3:1000': longMockData(3),
 }
 
 // 에러 응답 데이터

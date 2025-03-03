@@ -10,10 +10,12 @@ export const server = setupServer(
     const date = url.searchParams.get('MLSV_YMD')
     const startDate = url.searchParams.get('MLSV_FROM_YMD')
     const endDate = url.searchParams.get('MLSV_TO_YMD')
+    const pageIndex = url.searchParams.get('pIndex')
+    const pageSize = url.searchParams.get('pSize')
 
     // 단일 날짜
     if (province && school && date) {
-      const key = `${province}:${school}:${date}`
+      const key = `${province}:${school}:${date}${pageIndex && pageSize ? `:${pageIndex}:${pageSize}` : ''}`
       if (mockDataMap[key]) {
         return HttpResponse.json(mockDataMap[key])
       }
@@ -21,7 +23,7 @@ export const server = setupServer(
 
     // 날짜 범위
     if (province && school && startDate && endDate) {
-      const key = `${province}:${school}:${startDate}:${endDate}`
+      const key = `${province}:${school}:${startDate}:${endDate}${pageIndex && pageSize ? `:${pageIndex}:${pageSize}` : ''}`
       if (mockDataMap[key]) {
         return HttpResponse.json(mockDataMap[key])
       }

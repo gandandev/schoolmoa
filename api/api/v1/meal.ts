@@ -4,7 +4,7 @@ import type { NeisMealResponse, NeisMealResponseRow } from '../../types/neis'
 
 const PAGE_SIZE = 1000
 
-type MealResponse = {
+export type MealResponse = {
   date: string
   meals: {
     type: string
@@ -165,6 +165,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const params = new URLSearchParams({
       ATPT_OFCDC_SC_CODE: province as string,
       SD_SCHUL_CODE: school as string,
+      pIndex: '1',
       pSize: String(PAGE_SIZE),
       Type: 'json',
       KEY: process.env.NEIS_API_KEY,
