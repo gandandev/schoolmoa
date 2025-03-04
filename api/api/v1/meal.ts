@@ -107,10 +107,10 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     // 쿼리 검증
     if (
-      !validateDefaultQueries(province as string, school as string, {
-        date: date as string,
-        startDate: startDate as string,
-        endDate: endDate as string,
+      !validateDefaultQueries(province, school, {
+        date,
+        startDate,
+        endDate,
       })
     ) {
       response.status(400).json({
