@@ -1,22 +1,27 @@
 /**
  * 나이스 API 기본 응답 형식
- * @param T 응답 데이터 타입
+ * @param T 응답 행 데이터 타입
+ * @param N 나이스 응답 키
  */
-export type NeisResponseBase<T> = [
-  {
-    head: [
-      {
-        list_total_count: number
-      },
-      {
-        RESULT: NeisStatus
-      },
-    ]
-  },
-  {
-    row: T[]
-  },
-]
+export type NeisResponseBase<T, N extends string> =
+  | {
+      [key in N]: [
+        {
+          head: [
+            {
+              list_total_count: number
+            },
+            {
+              RESULT: NeisStatus
+            },
+          ]
+        },
+        {
+          row: T[]
+        },
+      ]
+    }
+  | NeisErrorOnlyResponse
 
 /**
  * 나이스 API 오류 응답 형식
@@ -51,11 +56,7 @@ export type NeisStatus = {
 /**
  * 나이스 급식식단정보 API 응답 형식
  */
-export type NeisMealResponse =
-  | {
-      mealServiceDietInfo: NeisResponseBase<NeisMealResponseRow>
-    }
-  | NeisErrorOnlyResponse
+export type NeisMealResponse = NeisResponseBase<NeisMealResponseRow, 'mealServiceDietInfo'>
 
 /**
  * 급식 응답 형식 행
