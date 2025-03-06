@@ -4,15 +4,6 @@ import { validateDefaultQueries } from './validation'
 import { NeisResponseBase } from '../types/neis'
 import { handleNeisStatus } from './neis'
 
-// Usage
-// export default createApiHandler({
-//   neisApiName: 'mealServiceDietInfo',
-//   processData: (data) => {
-//     // ... data processing logic ...
-//     return data
-//   },
-// })
-
 /**
  * API 핸들러 생성
  * @param T 나이스 API 응답 행 타입
