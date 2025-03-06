@@ -101,7 +101,7 @@ export function createApiHandler<T>(
       const statusResult = handleNeisStatus(status)
       if (statusResult) return response.status(statusResult.status).json(statusResult.body)
       if (status === 'INFO-200') return response.status(200).json([])
-      if (!('mealServiceDietInfo' in firstPageResult)) {
+      if (!(neisApiName in firstPageResult)) {
         return response.status(500).json({
           error: {
             code: 500,
