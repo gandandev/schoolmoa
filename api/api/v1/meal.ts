@@ -27,31 +27,34 @@ export type MealResponse = {
  * @returns 개선된 급식 응답 형식
  */
 export function formatMeal(meal: NeisMealResponseRow): MealResponse[number]['meals'][number] {
-  const menu = meal.DDISH_NM.split('<br/>').map((m) => {
-    const item = m.trim()
+  const menu = meal.DDISH_NM.split('<br/>')
+    .map((m) => {
+      const item = m.trim()
+      if (!item) return null // 빈 항목 제거
 
-    // 형식 1: 메뉴이름 (1.2.3.)
-    // 헝식 2: 메뉴이름1.2.3.
-    // \s*       공백 제거
-    // (.*?)     메뉴 이름, ?로 뒤의 알레르기 정보까지 선택되지 않도록 게으르게 조정
-    // \s*       공백 제거
-    // \(?       여는 괄호, 없을 수 있음
-    // [0-9. ]+  알레르기 정보: 숫자 + 점 + 공백
-    // \)?       닫는 괄호, 없을 수 있음
-    const match = item.match(/^\s*(.*?)\s*\(?([0-9. ]+)\)?$/)
+      // 형식 1: 메뉴이름 (1.2.3.)
+      // 헝식 2: 메뉴이름1.2.3.
+      // \s*       공백 제거
+      // (.*?)     메뉴 이름, ?로 뒤의 알레르기 정보까지 선택되지 않도록 게으르게 조정
+      // \s*       공백 제거
+      // \(?       여는 괄호, 없을 수 있음
+      // [0-9. ]+  알레르기 정보: 숫자 + 점 + 공백
+      // \)?       닫는 괄호, 없을 수 있음
+      const match = item.match(/^\s*(.*?)\s*\(?([0-9. ]+)\)?$/)
 
-    if (match) {
-      const [, name, allergenStr] = match
-      if (allergenStr) {
-        return {
-          name, // \s*로 공백이 이미 제거되었으므로 .trim()하지 않아도 됨
-          allergens: allergenStr.split('.').map(Number).filter(Boolean),
+      if (match) {
+        const [, name, allergenStr] = match
+        if (allergenStr) {
+          return {
+            name, // \s*로 공백이 이미 제거되었으므로 .trim()하지 않아도 됨
+            allergens: allergenStr.split('.').map(Number).filter(Boolean),
+          }
         }
       }
-    }
 
-    return { name: item, allergens: [] }
-  })
+      return { name: item, allergens: [] }
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null) // 빈 항목 제거
 
   // 돼지고기 : 국내산 -> { '돼지고기': '국내산' }
   const origin = meal.ORPLC_INFO

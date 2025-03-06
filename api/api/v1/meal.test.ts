@@ -266,6 +266,42 @@ describe('급식 데이터 정리', () => {
     expect(formatted.origin).toEqual({})
     expect(formatted.nutrition).toEqual({})
   })
+
+  test('<br/> 태그가 필요없는 곳에도 있는 경우', () => {
+    const mockMeal = {
+      ATPT_OFCDC_SC_CODE: 'B10',
+      ATPT_OFCDC_SC_NM: '서울특별시',
+      SD_SCHUL_CODE: '7010084',
+      SCHUL_NM: '서울과학고등학교',
+      MMEAL_SC_NM: '중식',
+      MMEAL_SC_CODE: '2',
+      MLSV_YMD: '20240320',
+      MLSV_FGR: 206,
+      DDISH_NM: '<br/>맑은콩나물국(5.6)<br/>지코바치밥(1.2.5.12.15)<br/><br/>깍두기(9)<br/>',
+      ORPLC_INFO: '돼지고기 : 국내산<br/>쌀 : 국내산<br/><br/>',
+      CAL_INFO: '596.5 Kcal',
+      NTR_INFO: '<br/>탄수화물(g) : 75.1<br/>단백질(g) : 30.9<br/>지방(g) : 17.8',
+      MLSV_FROM_YMD: '',
+      MLSV_TO_YMD: '',
+      LOAD_DTM: '',
+    }
+
+    const formatted = formatMeal(mockMeal)
+
+    expect(formatted.menu).toHaveLength(3)
+    expect(formatted.menu[0]).toEqual({ name: '맑은콩나물국', allergens: [5, 6] })
+    expect(formatted.menu[1]).toEqual({ name: '지코바치밥', allergens: [1, 2, 5, 12, 15] })
+    expect(formatted.menu[2]).toEqual({ name: '깍두기', allergens: [9] })
+    expect(formatted.origin).toEqual({
+      돼지고기: '국내산',
+      쌀: '국내산',
+    })
+    expect(formatted.nutrition).toEqual({
+      탄수화물: '75.1g',
+      단백질: '30.9g',
+      지방: '17.8g',
+    })
+  })
 })
 
 describe('페이지네이션 처리', () => {
