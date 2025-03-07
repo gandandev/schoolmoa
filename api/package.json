@@ -8,11 +8,16 @@
   },
   "license": "GPL-3.0-or-later",
   "dependencies": {
-    "@vercel/node": "^2.11.0"
+    "@vercel/node": "^2.11.0",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
+    "@types/estree": "^1.0.6",
     "@types/express": "^5.0.0",
+    "@types/json-schema": "^7.0.15",
+    "@types/node": "^22.13.5",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
     "@typescript-eslint/parser": "^8.23.0",
@@ -21,6 +26,7 @@
     "eslint-plugin-prettier": "^5.2.3",
     "express": "^4.21.2",
     "globals": "^15.15.0",
+    "msw": "^2.7.3",
     "prettier": "^3.5.0",
     "supertest": "^7.0.0",
     "typescript-eslint": "^8.24.0",
