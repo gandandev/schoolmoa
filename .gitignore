@@ -3,6 +3,8 @@
 .idea/
 .fleet/
 .sublime/
+.cursorrules
+.cursor/
 
 # ENV files
 .env
